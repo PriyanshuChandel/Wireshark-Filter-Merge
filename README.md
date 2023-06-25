@@ -11,7 +11,7 @@ This is a Python GUI tool for merging filtered PCAP or PCAPNG files into a singl
   - `subprocess`
   - `shutil`
   - `zipfile`
-  - `tkinter
+  - `tkinter`
   - `threading`
   
 ### How to Use
