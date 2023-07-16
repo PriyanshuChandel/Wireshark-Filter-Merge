@@ -25,6 +25,7 @@ This is a Python GUI tool for merging filtered PCAP or PCAPNG files into a singl
 8. Enter the filter criteria in the input field provided.
 9. Click the `Submit` button to begin the filter and merging process.
 10. The output file will be saved in the same directory where the program is executed with the name merged.pcapng.
+11. NOTE: SPECIFY THE TSHARK AND MERGECAP DIRECTORY CORRECTLY IN 'conf/conf.csv'
 
 ### Contributions
 Contributions to this repo are welcome. If you find a bug or have a suggestion for improvement, please open an issue on the repository. If you would like to make changes to the code, feel free to submit a pull request.
