@@ -21,8 +21,6 @@ userConf = 'conf/conf.csv'
 iconFile = join(dirname(__file__), 'wireshark.ico')
 aboutIcon = join(dirname(__file__), 'info.ico')
 
-
-
 def unZip(zippedPath, progressBar, window, progressStyle, messageText):
     progressStyle.configure("Custom.Horizontal.TProgressbar", background="yellow")
     unZipSuccess = 0
@@ -30,7 +28,7 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
         try:
             filesZippedPcap = glob(zippedPath + '\\*.zip')
             totalZippedFiles = len(filesZippedPcap)
-            for zipFile in filesZippedPcap:  
+            for zipFile in filesZippedPcap:  # This extracts if a directory selected having multiple zip files
                 multipleZip = ZipFile(zipFile)
                 multipleZip.extractall('Extracted')
                 unZipSuccess = unZipSuccess + 1
@@ -46,12 +44,12 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
     elif path.isfile(zippedPath):
         try:
             with ZipFile(zippedPath, 'r') as singleZip:
-                singleZip.extractall('Extracted')  
+                singleZip.extractall('Extracted')  # This extracts if a single zip selected contains .pcap/.pcapng
                 updateProgress(progressBar, 1, 1, window, progressStyle)
                 nestedZipFiles = [f for f in singleZip.namelist() if f.endswith('.zip')]
                 totalNestedZippedFiles = len(singleZip.namelist())
                 nestedSuccess = 0
-                for nestedZip in nestedZipFiles:  
+                for nestedZip in nestedZipFiles:  # This extracts if a single zip selected contains multiple zip
                     nestedZipPath = path.join('Extracted', nestedZip)
                     ZipFile(nestedZipPath).extractall('Extracted')
                     nestedSuccess = nestedSuccess + 1
@@ -69,16 +67,12 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
         messageText.config(text='Error! check logs')
         return False
 
-
-# 2. Thread to file dialog function separate to GUI thread
 def threadingFileDialog(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText, progressBar, window,
                         progressStyle, radioFolder, radioZipped, resetBtn):
     thread_fileDialog = Thread(target=fileDialogFunc,
                                args=(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText, progressBar,
                                      window, progressStyle, radioFolder, radioZipped, resetBtn))
     thread_fileDialog.start()
-
-
 
 files = ''
 
@@ -205,15 +199,12 @@ def fileDialogFunc(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText
                       f'{((end - start) / 60)} Minutes\n')
 
 
-
 def threadingSubmitBtn(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBtn, submitBtn, progressBar,
                        window, progressStyle, resetBtn):
     thread_submitBtn = Thread(target=filterMerge, args=(selectedFiles, messageText, filterEntry, pathEntry,
                                                         fileDialogBtn, submitBtn, progressBar, window, progressStyle,
                                                         resetBtn))
     thread_submitBtn.start()
-
-
 
 def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBtn, submitBtn, progressBar, window,
                 progressStyle, resetBtn):
@@ -309,8 +300,6 @@ def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBt
     fileHandler.write(f'{datetime.now().replace(microsecond=0)} TOTAL ELAPSED TIME TO COMPLETE WHOLE PROCESS IS '
                       f'{((endMerging - startFilter) / 60)} Minutes\n')
 
-
-
 def mainGUI():
     window = Tk()
     window.config(bg='light grey')
@@ -386,8 +375,6 @@ def mainGUI():
     aboutBtn.place(x=470, y=270)
     window.mainloop()
 
-
-
 def aboutWindow(mainWin):
     aboutWin = Toplevel(mainWin)
     aboutWin.grab_set()
@@ -396,7 +383,7 @@ def aboutWindow(mainWin):
     aboutWin.title('About')
     aboutWin.iconbitmap(aboutIcon)
     aboutWinLabel = Label(aboutWin, text=f'Version - 1.1\nDeveloped by Priyanshu\nFor any improvement please reach on '
-                                         f'below email\nEmail : priyanshu.kumar@alstomgroup.com\nMobile : '
+                                         f'below email\nEmail : chandelpriyanshu8@outlook.com\nMobile : '
                                          f'+91-8285775109 '
                                          f'', font=('Helvetica', 9)).place(x=1, y=6)
 
@@ -406,7 +393,6 @@ def updateProgress(progressBar, newVal, totalVal, window, progressStyle):
     progressBar['value'] = resultVal
     progressStyle.configure("Custom.Horizontal.TProgressbar", text='{:g} %'.format(resultVal))
     window.update()
-
 
 def enableFileDialogBtn(progressBar, pathEntry, filterEntry, submitBtn, fileDialogBtn, messageText):
     progressBar.config(value=0)
@@ -420,15 +406,11 @@ def enableFileDialogBtn(progressBar, pathEntry, filterEntry, submitBtn, fileDial
     pathEntry.config(state='disabled')
     messageText.config(text='')
 
-
-
 def checkEntries(pathEntry, filterEntry, submitBtn):
     if pathEntry.get() and filterEntry.get():
         submitBtn.config(state='normal', bg='green')
     else:
         submitBtn.config(state='disabled', bg='light grey')
-
-
 
 def resetBtnFunc(radioFolder, radioZipped, pathEntry, filterEntry, dialogBtn, submitBtn, resetBtn, progressBar,
                  messageText, progressStyle):
@@ -451,6 +433,5 @@ def resetBtnFunc(radioFolder, radioZipped, pathEntry, filterEntry, dialogBtn, su
         rmtree('Extracted')
     except:
         pass
-
 
 mainGUI()
