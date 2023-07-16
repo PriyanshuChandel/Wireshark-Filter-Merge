@@ -1,0 +1,2 @@
+Tshark Path,C:\Program Files (x86)\Wireshark\tshark.exe,Enter Tshark path like C:\Program Files (x86)\Wireshark\tshark.exe in between two commas
+MergeCap path,C:\Program Files (x86)\Wireshark\mergecap.exe,Enter MergeCap path like C:\Program Files (x86)\Wireshark\mergecap.exe in between two commas
