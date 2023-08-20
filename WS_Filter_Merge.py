@@ -11,15 +11,14 @@ from datetime import datetime
 from csv import reader
 from time import time
 
-
 if not exists('log'):
     makedirs('log')
 fileHandler = open(f"log/logs_{datetime.now().strftime('%Y%m%d%H%M%S')}.txt", 'a')
 
-
 userConf = 'conf/conf.csv'
 iconFile = join(dirname(__file__), 'wireshark.ico')
 aboutIcon = join(dirname(__file__), 'info.ico')
+
 
 def unZip(zippedPath, progressBar, window, progressStyle, messageText):
     progressStyle.configure("Custom.Horizontal.TProgressbar", background="yellow")
@@ -28,7 +27,7 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
         try:
             filesZippedPcap = glob(zippedPath + '\\*.zip')
             totalZippedFiles = len(filesZippedPcap)
-            for zipFile in filesZippedPcap:  # This extracts if a directory selected having multiple zip files
+            for zipFile in filesZippedPcap:
                 multipleZip = ZipFile(zipFile)
                 multipleZip.extractall('Extracted')
                 unZipSuccess = unZipSuccess + 1
@@ -44,12 +43,12 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
     elif path.isfile(zippedPath):
         try:
             with ZipFile(zippedPath, 'r') as singleZip:
-                singleZip.extractall('Extracted')  # This extracts if a single zip selected contains .pcap/.pcapng
+                singleZip.extractall('Extracted')
                 updateProgress(progressBar, 1, 1, window, progressStyle)
                 nestedZipFiles = [f for f in singleZip.namelist() if f.endswith('.zip')]
                 totalNestedZippedFiles = len(singleZip.namelist())
                 nestedSuccess = 0
-                for nestedZip in nestedZipFiles:  # This extracts if a single zip selected contains multiple zip
+                for nestedZip in nestedZipFiles:
                     nestedZipPath = path.join('Extracted', nestedZip)
                     ZipFile(nestedZipPath).extractall('Extracted')
                     nestedSuccess = nestedSuccess + 1
@@ -67,12 +66,14 @@ def unZip(zippedPath, progressBar, window, progressStyle, messageText):
         messageText.config(text='Error! check logs')
         return False
 
+
 def threadingFileDialog(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText, progressBar, window,
                         progressStyle, radioFolder, radioZipped, resetBtn):
     thread_fileDialog = Thread(target=fileDialogFunc,
                                args=(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText, progressBar,
                                      window, progressStyle, radioFolder, radioZipped, resetBtn))
     thread_fileDialog.start()
+
 
 files = ''
 
@@ -195,8 +196,12 @@ def fileDialogFunc(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText
             pathEntry.config(state='disabled')
     resetBtn.config(state='normal', bg='orange')
     end = time()
-    fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE UnZipping PROCESS IS '
-                      f'{((end - start) / 60)} Minutes\n')
+    elapsedTime = end - start
+    hours, remainder = divmod(elapsedTime, 3600)
+    minutes, remainder = divmod(remainder, 60)
+    seconds, milliseconds = divmod(remainder, 1)
+    fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE {int(hours)} '
+                      f'hours {int(minutes)} minutes {int(seconds)} seconds {int(milliseconds * 1000)} milliseconds')
 
 
 def threadingSubmitBtn(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBtn, submitBtn, progressBar,
@@ -205,6 +210,7 @@ def threadingSubmitBtn(selectedFiles, messageText, filterEntry, pathEntry, fileD
                                                         fileDialogBtn, submitBtn, progressBar, window, progressStyle,
                                                         resetBtn))
     thread_submitBtn.start()
+
 
 def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBtn, submitBtn, progressBar, window,
                 progressStyle, resetBtn):
@@ -215,6 +221,7 @@ def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBt
     startFilter = time()
     csvReader = list(reader(open(userConf, 'r')))
     pathTShark = csvReader[0][1]
+    endMerging = None
     if not path.exists(pathTShark):
         fileHandler.write(f'{datetime.now().replace(microsecond=0)} tshark.exe not found at specified path in '
                           f'conf/conf.xml [{pathTShark}]\n')
@@ -251,8 +258,13 @@ def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBt
         fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterPass}] files filtered\n')
         fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterFail}] files failed to filter\n')
         endFilter = time()
+        elapsedTimeFilter = endFilter - startFilter
+        hoursFilter, remainderFilter = divmod(elapsedTimeFilter, 3600)
+        minutesFilter, remainderFilter = divmod(remainderFilter, 60)
+        secondsFilter, millisecondsFilter = divmod(remainderFilter, 1)
         fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Filtering PROCESS IS '
-                          f'{((endFilter - startFilter) / 60)} Minutes\n')
+                          f'{int(hoursFilter)} hours {int(minutesFilter)} minutes {int(secondsFilter)} seconds '
+                          f'{int(millisecondsFilter * 1000)} milliseconds')
         startMerging = time()
         if filterPass > 0:
             messageText.config(text='Filter completed, Merging all the filtered Wireshark files')
@@ -294,11 +306,22 @@ def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBt
         except:
             pass
         endMerging = time()
+        elapsedTimeMerge = endMerging - startMerging
+        hoursMerge, remainderMerge = divmod(elapsedTimeMerge, 3600)
+        minutesMerge, remainderMerge = divmod(remainderMerge, 60)
+        secondsMerge, millisecondsMerge = divmod(remainderMerge, 1)
         fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Merging PROCESS IS '
-                          f'{((endMerging - startMerging) / 60)} Minutes\n')
+                          f'{int(hoursMerge)} hours {int(minutesMerge)} minutes {int(secondsMerge)} seconds '
+                          f'{int(millisecondsMerge * 1000)} milliseconds')
 
-    fileHandler.write(f'{datetime.now().replace(microsecond=0)} TOTAL ELAPSED TIME TO COMPLETE WHOLE PROCESS IS '
-                      f'{((endMerging - startFilter) / 60)} Minutes\n')
+    elapsedTimeTotal = endMerging - startFilter
+    hoursTotal, remainderTotal = divmod(elapsedTimeTotal, 3600)
+    minutesTotal, remainderTotal = divmod(remainderTotal, 60)
+    secondsTotal, millisecondsTotal = divmod(remainderTotal, 1)
+    fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE WHOLE PROCESS IS '
+                      f'{int(hoursTotal)} hours {int(minutesTotal)} minutes {int(secondsTotal)} seconds '
+                      f'{int(millisecondsTotal * 1000)} milliseconds')
+
 
 def mainGUI():
     window = Tk()
@@ -353,7 +376,8 @@ def mainGUI():
     submitBtn.place(x=230, y=185)
     resetBtn = Button(window, text='Reset',
                       command=lambda: resetBtnFunc(radioFolder, radioZipped, pathEntry, filterEntry,
-                                                   fileDialogBtn, submitBtn, resetBtn, progress, messageLabel, progressStyle),
+                                                   fileDialogBtn, submitBtn, resetBtn, progress, messageLabel,
+                                                   progressStyle),
                       bg='light grey', state='disabled')
     resetBtn.place(x=290, y=185)
     progress = Progressbar(window, length=510, mode="determinate", style="Custom.Horizontal.TProgressbar")
@@ -362,10 +386,10 @@ def mainGUI():
     progressStyle.theme_use('clam')
     progressStyle.configure("Custom.Horizontal.TProgressbar", background="yellow", text='0 %')
     progressStyle.layout('Custom.Horizontal.TProgressbar', [('Horizontal.Progressbar.trough',
-                                                           {'children': [('Horizontal.Progressbar.pbar',
-                                                                          {'side': 'left', 'sticky': 'ns'})],
-                                                            'sticky': 'nswe'}),
-                                                          ('Horizontal.Progressbar.label', {'sticky': ''})])
+                                                             {'children': [('Horizontal.Progressbar.pbar',
+                                                                            {'side': 'left', 'sticky': 'ns'})],
+                                                              'sticky': 'nswe'}),
+                                                            ('Horizontal.Progressbar.label', {'sticky': ''})])
     messageLabel = Label(window, font=('Arial', 9, 'bold'), bg='light grey')
     messageLabel.place(x=6, y=250)
     warnLabel = Label(window, text='Note: Make sure Wireshark is installed and path configured in "conf/conf.csv"',
@@ -374,6 +398,7 @@ def mainGUI():
     aboutBtn = Button(window, text='About', bg='brown', command=lambda: aboutWindow(window))
     aboutBtn.place(x=470, y=270)
     window.mainloop()
+
 
 def aboutWindow(mainWin):
     aboutWin = Toplevel(mainWin)
@@ -394,6 +419,7 @@ def updateProgress(progressBar, newVal, totalVal, window, progressStyle):
     progressStyle.configure("Custom.Horizontal.TProgressbar", text='{:g} %'.format(resultVal))
     window.update()
 
+
 def enableFileDialogBtn(progressBar, pathEntry, filterEntry, submitBtn, fileDialogBtn, messageText):
     progressBar.config(value=0)
     pathEntry.config(state='normal')
@@ -406,11 +432,13 @@ def enableFileDialogBtn(progressBar, pathEntry, filterEntry, submitBtn, fileDial
     pathEntry.config(state='disabled')
     messageText.config(text='')
 
+
 def checkEntries(pathEntry, filterEntry, submitBtn):
     if pathEntry.get() and filterEntry.get():
         submitBtn.config(state='normal', bg='green')
     else:
         submitBtn.config(state='disabled', bg='light grey')
+
 
 def resetBtnFunc(radioFolder, radioZipped, pathEntry, filterEntry, dialogBtn, submitBtn, resetBtn, progressBar,
                  messageText, progressStyle):
@@ -433,5 +461,6 @@ def resetBtnFunc(radioFolder, radioZipped, pathEntry, filterEntry, dialogBtn, su
         rmtree('Extracted')
     except:
         pass
+
 
 mainGUI()
