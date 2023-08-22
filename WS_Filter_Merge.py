@@ -108,6 +108,7 @@ def fileDialogFunc(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText
                 fileHandler.write(f'{datetime.now().replace(microsecond=0)} Unpacking...\n')
                 messageText.config(text='Unpacking captures..')
                 unZipSuccess = unZip(folderSourcePath, progressBar, window, progressStyle, messageText)
+                fileHandler.flush()
                 if unZipSuccess:
                     files = glob('Extracted\**\\*.pcap*', recursive=True)
                     fileHandler.write(f'{datetime.now().replace(microsecond=0)} Unpacking done...\n')
@@ -201,7 +202,8 @@ def fileDialogFunc(radioVarValue, pathEntry, dialogBtn, filterEntry, messageText
     minutes, remainder = divmod(remainder, 60)
     seconds, milliseconds = divmod(remainder, 1)
     fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE {int(hours)} '
-                      f'hours {int(minutes)} minutes {int(seconds)} seconds {int(milliseconds * 1000)} milliseconds')
+                      f'hours {int(minutes)} minutes {int(seconds)} seconds {int(milliseconds * 1000)} milliseconds\n')
+    fileHandler.flush()
 
 
 def threadingSubmitBtn(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBtn, submitBtn, progressBar,
@@ -219,108 +221,125 @@ def filterMerge(selectedFiles, messageText, filterEntry, pathEntry, fileDialogBt
     submitBtn.config(state='disabled', bg='light grey')
     resetBtn.config(state='disabled', bg='light grey')
     startFilter = time()
-    csvReader = list(reader(open(userConf, 'r')))
-    pathTShark = csvReader[0][1]
-    endMerging = None
-    if not path.exists(pathTShark):
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} tshark.exe not found at specified path in '
-                          f'conf/conf.xml [{pathTShark}]\n')
+    try:
+        csvReader = None
+        with open(userConf, 'r') as cFile:
+            csvReader = list(reader(cFile))
+    except Exception as e:
         messageText.config(text='Error, check logs!')
-    else:
-        userFilter = str(filterEntry.get())
-        filterEntry.config(state='readonly')
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} USER FILTER INPUT [{userFilter}]\n')
-        fNull = open(devnull, 'w')
-        if not path.exists('Filtered'):
-            fileHandler.write(
-                f'{datetime.now().replace(microsecond=0)} [Filtered] path does not exists, creating.. \n')
-            makedirs('Filtered')
-            fileHandler.write(f'{datetime.now().replace(microsecond=0)} [Filtered] path created\n')
-        messageText.config(text='Filtering..')
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} Filtering...\n')
-        filterPass = 0
-        filterFail = 0
-        totalFilesToFilter = len(selectedFiles)
-        for file in selectedFiles:
-            path_out = 'Filtered/' + path.basename(file)
-            command = [pathTShark, '-r', file, '-w', path_out, '-2', '-R', userFilter]
-            filterProcess = Popen(command, stdout=fNull, stderr=fNull, shell=True)
-            streamData = filterProcess.communicate()
-            if filterProcess.returncode != 0:
-                fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{file}] failed to filter\n')
-                fileHandler.write(f'{datetime.now().replace(microsecond=0)} [FILTER PROCESS RETURN '
-                                  f'CODE {filterProcess.returncode}]\n')
-                filterFail = filterFail + 1
-            elif filterProcess.returncode == 0:
-                filterPass = filterPass + 1
-                updateProgress(progressBar, filterPass, totalFilesToFilter, window, progressStyle)
-                fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{file}] filtered\n')
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterPass}] files filtered\n')
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterFail}] files failed to filter\n')
-        endFilter = time()
-        elapsedTimeFilter = endFilter - startFilter
-        hoursFilter, remainderFilter = divmod(elapsedTimeFilter, 3600)
-        minutesFilter, remainderFilter = divmod(remainderFilter, 60)
-        secondsFilter, millisecondsFilter = divmod(remainderFilter, 1)
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Filtering PROCESS IS '
-                          f'{int(hoursFilter)} hours {int(minutesFilter)} minutes {int(secondsFilter)} seconds '
-                          f'{int(millisecondsFilter * 1000)} milliseconds')
-        startMerging = time()
-        if filterPass > 0:
-            messageText.config(text='Filter completed, Merging all the filtered Wireshark files')
-            pathMergeCAP = csvReader[1][1]
-            if not path.exists(pathMergeCAP):
-                fileHandler.write(
-                    f'{datetime.now().replace(microsecond=0)} mergecap.exe not found at specified path in '
-                    f'conf/conf.xml [{pathMergeCAP}]\n')
-                messageText.config(text='Error, check logs!')
-            else:
-                pathOut = 'Merged.pcapng'
-                command = [pathMergeCAP, '-w', pathOut, 'Filtered/*.pcap*']
-                mergeProcess = Popen(command, shell=True)
-                mergeProcess.wait()
-                if mergeProcess.returncode != 0:
-                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} failed to merge filtered files\n')
-                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} [MERGE PROCESS RETURN '
-                                      f'CODE{mergeProcess.returncode}]\n')
-                else:
-                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} files merged successfully.\n')
-                    progressBar.config(value=100)
-                    progressStyle.configure("Custom.Horizontal.TProgressbar", background="green", text='100 %')
-                    messageText.config(text='Merged.pcapng created at current working directory')
-                filterEntry.config(state='normal')
-                filterEntry.delete(0, END)
-                filterEntry.config(state='disabled')
-                pathEntry.config(state='normal')
-                pathEntry.delete(0, END)
-                pathEntry.config(state='disabled')
-                fileDialogBtn.config(state='disabled')
-                submitBtn.config(state='disabled', bg='light grey')
-                resetBtn.config(state='normal', bg='orange')
-        else:
-            messageText.config(text='Error! Check logs')
-            resetBtn.config(state='normal', bg='orange')
-        try:
-            rmtree('Filtered')
-            rmtree('Extracted')
-        except:
-            pass
-        endMerging = time()
-        elapsedTimeMerge = endMerging - startMerging
-        hoursMerge, remainderMerge = divmod(elapsedTimeMerge, 3600)
-        minutesMerge, remainderMerge = divmod(remainderMerge, 60)
-        secondsMerge, millisecondsMerge = divmod(remainderMerge, 1)
-        fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Merging PROCESS IS '
-                          f'{int(hoursMerge)} hours {int(minutesMerge)} minutes {int(secondsMerge)} seconds '
-                          f'{int(millisecondsMerge * 1000)} milliseconds')
+        fileHandler.write(f'{datetime.now().replace(microsecond=0)} error occurred while opening conf\conf.csv {e}\n')
 
-    elapsedTimeTotal = endMerging - startFilter
-    hoursTotal, remainderTotal = divmod(elapsedTimeTotal, 3600)
-    minutesTotal, remainderTotal = divmod(remainderTotal, 60)
-    secondsTotal, millisecondsTotal = divmod(remainderTotal, 1)
-    fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE WHOLE PROCESS IS '
-                      f'{int(hoursTotal)} hours {int(minutesTotal)} minutes {int(secondsTotal)} seconds '
-                      f'{int(millisecondsTotal * 1000)} milliseconds')
+    if csvReader is not None:
+        pathTShark = csvReader[0][1]
+    else:
+        pathTShark = None
+
+    endMerging = None
+    if pathTShark is not None:
+        if not path.exists(pathTShark):
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} tshark.exe not found at specified path in '
+                              f'conf/conf.xml [{pathTShark}]\n')
+            messageText.config(text='Error, check logs!')
+        else:
+            userFilter = str(filterEntry.get())
+            filterEntry.config(state='readonly')
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} USER FILTER INPUT [{userFilter}]\n')
+            fNull = open(devnull, 'w')
+            if not path.exists('Filtered'):
+                fileHandler.write(
+                    f'{datetime.now().replace(microsecond=0)} [Filtered] path does not exists, creating.. \n')
+                makedirs('Filtered')
+                fileHandler.write(f'{datetime.now().replace(microsecond=0)} [Filtered] path created\n')
+            messageText.config(text='Filtering..')
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} Filtering...\n')
+            filterPass = 0
+            filterFail = 0
+            totalFilesToFilter = len(selectedFiles)
+            for file in selectedFiles:
+                path_out = 'Filtered/' + path.basename(file)
+                command = [pathTShark, '-r', file, '-w', path_out, '-2', '-R', userFilter]
+                filterProcess = Popen(command, stdout=fNull, stderr=fNull, shell=True)
+                streamData = filterProcess.communicate()
+                if filterProcess.returncode != 0:
+                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{file}] failed to filter\n')
+                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} [FILTER PROCESS RETURN '
+                                      f'CODE {filterProcess.returncode}]\n')
+                    filterFail = filterFail + 1
+                elif filterProcess.returncode == 0:
+                    filterPass = filterPass + 1
+                    updateProgress(progressBar, filterPass, totalFilesToFilter, window, progressStyle)
+                    fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{file}] filtered\n')
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterPass}] files filtered\n')
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} [{filterFail}] files failed to filter\n')
+            endFilter = time()
+            elapsedTimeFilter = endFilter - startFilter
+            hoursFilter, remainderFilter = divmod(elapsedTimeFilter, 3600)
+            minutesFilter, remainderFilter = divmod(remainderFilter, 60)
+            secondsFilter, millisecondsFilter = divmod(remainderFilter, 1)
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Filtering PROCESS IS '
+                              f'{int(hoursFilter)} hours {int(minutesFilter)} minutes {int(secondsFilter)} seconds '
+                              f'{int(millisecondsFilter * 1000)} milliseconds')
+            startMerging = time()
+            if filterPass > 0:
+                messageText.config(text='Filter completed, Merging all the filtered Wireshark files')
+                pathMergeCAP = csvReader[1][1]
+                if not path.exists(pathMergeCAP):
+                    fileHandler.write(
+                        f'{datetime.now().replace(microsecond=0)} mergecap.exe not found at specified path in '
+                        f'conf/conf.xml [{pathMergeCAP}]\n')
+                    messageText.config(text='Error, check logs!')
+                else:
+                    pathOut = 'Merged.pcapng'
+                    command = [pathMergeCAP, '-w', pathOut, 'Filtered/*.pcap*']
+                    mergeProcess = Popen(command, shell=True)
+                    mergeProcess.wait()
+                    if mergeProcess.returncode != 0:
+                        fileHandler.write(f'{datetime.now().replace(microsecond=0)} failed to merge filtered files\n')
+                        fileHandler.write(f'{datetime.now().replace(microsecond=0)} [MERGE PROCESS RETURN '
+                                          f'CODE{mergeProcess.returncode}]\n')
+                    else:
+                        fileHandler.write(f'{datetime.now().replace(microsecond=0)} files merged successfully.\n')
+                        progressBar.config(value=100)
+                        progressStyle.configure("Custom.Horizontal.TProgressbar", background="green", text='100 %')
+                        messageText.config(text='Merged.pcapng created at current working directory')
+                    filterEntry.config(state='normal')
+                    filterEntry.delete(0, END)
+                    filterEntry.config(state='disabled')
+                    pathEntry.config(state='normal')
+                    pathEntry.delete(0, END)
+                    pathEntry.config(state='disabled')
+                    fileDialogBtn.config(state='disabled')
+                    submitBtn.config(state='disabled', bg='light grey')
+                    resetBtn.config(state='normal', bg='orange')
+            else:
+                messageText.config(text='Error! Check logs')
+                resetBtn.config(state='normal', bg='orange')
+            try:
+                rmtree('Filtered')
+                rmtree('Extracted')
+            except:
+                pass
+            endMerging = time()
+            elapsedTimeMerge = endMerging - startMerging
+            hoursMerge, remainderMerge = divmod(elapsedTimeMerge, 3600)
+            minutesMerge, remainderMerge = divmod(remainderMerge, 60)
+            secondsMerge, millisecondsMerge = divmod(remainderMerge, 1)
+            fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE Merging PROCESS IS '
+                              f'{int(hoursMerge)} hours {int(minutesMerge)} minutes {int(secondsMerge)} seconds '
+                              f'{int(millisecondsMerge * 1000)} milliseconds\n')
+
+        elapsedTimeTotal = endMerging - startFilter
+        hoursTotal, remainderTotal = divmod(elapsedTimeTotal, 3600)
+        minutesTotal, remainderTotal = divmod(remainderTotal, 60)
+        secondsTotal, millisecondsTotal = divmod(remainderTotal, 1)
+        fileHandler.write(f'{datetime.now().replace(microsecond=0)} ELAPSED TIME TO COMPLETE WHOLE PROCESS IS '
+                          f'{int(hoursTotal)} hours {int(minutesTotal)} minutes {int(secondsTotal)} seconds '
+                          f'{int(millisecondsTotal * 1000)} milliseconds\n')
+    else:
+        fileHandler.write(f'{datetime.now().replace(microsecond=0)} Tshark not found\n')
+        resetBtn.config(state='normal', bg='orange')
+        messageText.config(text='Error, check logs!')
+    fileHandler.flush()
 
 
 def mainGUI():
