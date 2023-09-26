@@ -36,7 +36,7 @@ class WSApp:
     availableKeysToSelectList = []
     userSelectedFilterSyntax = ''
     preconfiguredFilterDict = {
-        'Custom Filter': 'custom_filter', 'HTTP-packets': 'http', 'SSL-TLS-Packets(Including-HTTPS)': 'tls',
+        'Custom Filter': 'custom_filter', 'HTTP-Packets': 'http', 'SSL-TLS-Packets(Including-HTTPS)': 'tls',
         'SSL-TLS-Handshake-For-HTTPS': 'http.request.method == "CONNECT"', 'TCP-Packet': 'tcp', 'UDP-Packet': 'udp',
         'ICMP(Ping-Requests-And-Replies)': 'icmp', 'DNS-Packets': 'dns', 'FTP-Packets': 'ftp',
         'SMTP(Email-Transmission)': 'smtp', 'POP3(Email-From-Server)': 'pop3',
@@ -52,7 +52,7 @@ class WSApp:
         filterwarnings("ignore", category=UserWarning)
         self.window = Tk()
         self.window.config(bg='light grey')
-        self.window.title('PacketPulse v1.2')
+        self.window.title('PacketPulse v1.3')
         self.window.geometry('520x420')
         self.window.iconbitmap(self.iconFile)
         self.window.resizable(False, False)
@@ -60,7 +60,7 @@ class WSApp:
         self.radioVar.set(None)
         self.menuBar = Menu(self.window, cursor='hand2')
         self.toolMenu = Menu(self.menuBar, tearoff=0, cursor='hand2')
-        self.toolMenu.add_command(label="Add Filter", command=self.launchFilterModWindow)
+        self.toolMenu.add_command(label="Filters", command=self.launchFilterModWindow)
         self.extraMenu = Menu(self.menuBar, tearoff=0, cursor='hand2')
         self.extraMenu.add_command(label="Help", command=self.showShortcuts)
         self.extraMenu.add_separator()
@@ -139,7 +139,7 @@ class WSApp:
         self.warnLabel.place(x=6, y=380)
 
     def aboutWindow(self):
-        message = 'Version 1.2 - Wireshark Filter and Merge\nDeveloped by Priyanshu\n\nFor any suggestions or ' \
+        message = 'Version 1.3 - Wireshark Filter and Merge\nDeveloped by Priyanshu\n\nFor any suggestions or ' \
                   'enhancements, please feel free to contact me through the following channels:\n\nEmail: chandel' \
                   'priyanshu8@outlook.com\nMobile: +91-XXXXXXXXXX\n\nYou can also reach me via my personal ' \
                   'website:\nhttps://priyanshuchandel.github.io/'
@@ -691,34 +691,26 @@ class filterMod:
         self.filterModTab1 = Frame(self.filterModNotebook, bg='light grey')
         self.filterModNotebook.add(self.filterModTab1, text="Modify Filter")
         self.filterModNotebook.pack()
-        self.filterModTab1FilterNameLabel = Label(self.filterModTab1, text='Filter Name', bg='light grey',
-                                                  font=('Arial', 8, 'bold italic'))
-        self.filterModTab1FilterNameLabel.place(x=2, y=10)
         self.filterModTab1Frame = Frame(self.filterModTab1, borderwidth=2, relief="groove")
-        self.filterModTab1Frame.place(x=75, y=7)
-        self.filterModTab1FilterNameEntry = Entry(self.filterModTab1Frame, width=35, font=("Arial", 9))
+        self.filterModTab1Frame.place(x=5, y=7)
+        self.filterModTab1FilterNameEntry = Entry(self.filterModTab1Frame, width=54, fg='grey', font=("Arial", 9))
         self.filterModTab1FilterNameEntry.pack(side="right", padx=5)
+        self.filterModTab1FilterNameEntry.insert(0, "Search here")
         self.filterModTab1FilterNameEntryLabel = Label(self.filterModTab1Frame)
         self.filterModTab1FilterNameEntryLabel.pack(side="right", padx=(0, 5))
-        self.filterModTab1SearchBtn = Button(self.filterModTab1, text='Search', command=lambda: self.searchReturn(),
-                                             borderwidth=4, relief="groove", bg='azure', state='disabled')
-        self.filterModTab1SearchBtn.place(x=365, y=5)
         self.filterModTab1MessageLabel = Label(self.filterModTab1, bg='light grey', font=("Helvetica", 10))
-        self.filterModTab1MessageLabel.place(x=2, y=40)
-        self.filterModTab1FetchallBtn = Button(self.filterModTab1, text='Fetch All Filter',
-                                               command=lambda: self.updateListboxFetchAll(), borderwidth=4,
-                                               relief="groove", bg='light green', cursor='hand2')
-        self.filterModTab1FetchallBtn.place(x=325, y=60)
+        self.filterModTab1MessageLabel.place(x=2, y=45)
         self.filterModTab1ListFrame = Frame(self.filterModTab1, height=8, width=10)
         self.filterModTab1ListFrame.place(x=0, y=95)
         self.filterModTab1ListScrollY = Scrollbar(self.filterModTab1ListFrame, orient='vertical')
         self.filterModTab1ListScrollY.grid(row=0, column=2, sticky="ns")
         self.filterModTab1ListScrollX = Scrollbar(self.filterModTab1ListFrame, orient='horizontal')
         self.filterModTab1ListScrollX.grid(row=1, column=0, sticky="ew", columnspan=3)
-
         self.filterModTab1List = Treeview(self.filterModTab1ListFrame, columns=self.listColumnsHeading, show="headings",
                                           yscrollcommand=self.filterModTab1ListScrollY.set,
                                           xscrollcommand=self.filterModTab1ListScrollX.set, cursor='hand2')
+        self.filterModTab1ListScrollY.config(command=self.filterModTab1List.yview)
+        self.filterModTab1ListScrollX.config(command=self.filterModTab1List.xview)
         self.filterModTab1List.grid(row=0, column=0, sticky="nsew")
         self.filterModTab1List.tag_configure('evenRowDefault', background='white')
         self.filterModTab1List.tag_configure('oddRowDefault', background='light blue')
@@ -729,8 +721,6 @@ class filterMod:
         self.style.configure("Treeview", foreground='black', background='white', rowheight=25, fieldbackground='white')
         self.style.configure("Treeview.Heading", font=("Helvetica", 10))
         self.style.map("Treeview", background=[('selected', 'brown')])
-        self.filterModTab1ListScrollY.config(command=self.filterModTab1List.yview)
-        self.filterModTab1ListScrollX.config(command=self.filterModTab1List.xview)
         for col in self.listColumnsHeading:
             self.filterModTab1List.heading(col, text=col)
         self.filterNameUserEntry = Entry(self.filterModTab1ListFrame, highlightthickness=2, highlightcolor="blue",
@@ -741,9 +731,18 @@ class filterMod:
                                            state='disabled')
         self.filterSyntaxUserEntry.grid(row=3, column=0, columnspan=3, sticky="ew")
 
-        self.filterModTab1FilterNameEntry.bind('<KeyRelease>', lambda event: self.toggleSearchBtn())
+        self.filterModTab1FilterNameEntry.bind('<KeyRelease>', lambda event: self.returnSearch())
+        self.filterModTab1FilterNameEntry.bind("<FocusIn>",
+                                               lambda event: (self.filterModTab1FilterNameEntry.delete(0, 'end'),
+                                                              self.filterModTab1FilterNameEntry.config(fg='black'))
+                                               if self.filterModTab1FilterNameEntry.get() == "Search here" else None)
+        self.filterModTab1FilterNameEntry.bind("<FocusOut>",
+                                               lambda event: self.filterModTab1FilterNameEntry.insert(0, "Search here")
+                                               if not self.filterModTab1FilterNameEntry.get() else None)
         self.filterModTab1List.bind("<<TreeviewSelect>>", self.onListItemSelection)
         self.filterModWin.bind('<Key>', self.saveModifications)
+
+        self.filterModWin.after(1, self.updateListboxFetchAll)
 
     def validateUserInput(self, P):
         pattern = r'^[a-zA-Z0-9_\-()]*$'
@@ -754,80 +753,69 @@ class filterMod:
             self.filterModTab1MessageLabel.config(text='No special characters except "-", "_" and "()"', fg='red')
             return False
 
-    def toggleSearchBtn(self):
+    def returnSearch(self):
         self.filterModTab1MessageLabel.config(text='')
-        if len(self.filterModTab1FilterNameEntry.get()) > 0:
-            self.filterModTab1SearchBtn.config(state='normal', bg='light green', cursor='hand2')
-            self.filterModTab1FetchallBtn.config(state='disabled', bg='azure', cursor='arrow')
-        else:
-            self.filterModTab1SearchBtn.config(state='disabled', bg='azure', cursor='arrow')
-            self.filterModTab1FetchallBtn.config(state='normal', bg='light green', cursor='hand2')
+        filterName = self.filterModTab1FilterNameEntry.get()
+        if len(filterName) > 0:
+            count = 0
+            self.writeLog('info', f'Searching DB for filterName [{filterName}] entered by user')
+            self.writeLog('info', f'Connecting to DB {self.dbFileName}')
+            dbConn = connect(self.dbFileName)
+            dbCur = dbConn.cursor()
+            dbCur.execute(f"SELECT * FROM {self.dbTableName} WHERE UPPER(FiltersName) LIKE UPPER(?)",
+                          ('%' + filterName + '%',))
+            matchesFilters = dbCur.fetchall()
+            self.filterModTab1List.delete(*self.filterModTab1List.get_children())
+            if len(matchesFilters) == 0:
+                self.writeLog('info', f'No match found for [{filterName}]')
+                self.filterModTab1MessageLabel.config(text=f'No filter exists with name {filterName}', fg='red')
+            else:
+                self.writeLog('info', f'Matches found, updating list')
+                self.filterModTab1MessageLabel.config(text='')
+                self.filterModTab1List.column("Filter-Name", width=270)
+                self.filterModTab1List.column("Filter-Syntax", width=440)
+                for findMatchedFilter in matchesFilters:
+                    if findMatchedFilter[1].lower() != 'Custom Filter'.lower():
+                        if findMatchedFilter[3] == 'default':
+                            if count % 2 == 0:
+                                self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
+                                                                                              findMatchedFilter[2]),
+                                                              tags=('evenRowDefault',))
+                            else:
+                                self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
+                                                                                              findMatchedFilter[2]),
+                                                              tags=('oddRowDefault',))
+                        elif findMatchedFilter[3] == 'userAdded':
+                            if count % 2 == 0:
+                                self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
+                                                                                              findMatchedFilter[2]),
+                                                              tags=('evenRowUserAdded',))
+                            else:
+                                self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
+                                                                                              findMatchedFilter[2]),
+                                                              tags=('oddRowUserAdded',))
+                        count = count + 1
+            dbConn.close()
+            self.writeLog('info', 'List updated, closing db connection')
+        if len(filterName) == 0:
+            self.updateListboxFetchAll()
         self.filterNameUserEntry.config(state='normal')
         self.filterNameUserEntry.delete(0, "end")
         self.filterNameUserEntry.config(state='disabled')
         self.filterSyntaxUserEntry.config(state='normal')
         self.filterSyntaxUserEntry.delete(0, "end")
         self.filterSyntaxUserEntry.config(state='disabled')
-        self.filterModTab1List.delete(*self.filterModTab1List.get_children())
-
-    def searchReturn(self):
-        count = 0
-        filterName = self.filterModTab1FilterNameEntry.get().strip()
-        self.writeLog('info', f'Searching DB for filterName [{filterName}] entered by user')
-        self.filterModWin.focus_set()
-        self.writeLog('info', f'Connecting to DB {self.dbFileName}')
-        dbConn = connect(self.dbFileName)
-        dbCur = dbConn.cursor()
-        dbCur.execute(f"SELECT * FROM {self.dbTableName} WHERE UPPER(FiltersName) LIKE UPPER(?)",
-                      ('%' + filterName + '%',))
-        matchesFilters = dbCur.fetchall()
-        self.filterModTab1List.delete(*self.filterModTab1List.get_children())
-        self.filterModTab1SearchBtn.config(state='disabled', cursor='arrow', bg='azure')
-        if len(matchesFilters) == 0:
-            self.writeLog('info', f'No match found for [{filterName}]')
-            self.filterModTab1MessageLabel.config(text=f'No filter exists with name {filterName}', fg='red')
-            self.filterModTab1FilterNameEntry.delete(0, 'end')
-        else:
-            self.writeLog('info', f'Matches found, updating list')
-            self.filterModTab1MessageLabel.config(text='')
-            for findMatchedFilter in matchesFilters[1:]:
-                if findMatchedFilter[3] == 'default':
-                    if count % 2 == 0:
-                        self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
-                                                                                      findMatchedFilter[2]),
-                                                      tags=('evenRowDefault',))
-                    else:
-                        self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
-                                                                                      findMatchedFilter[2]),
-                                                      tags=('oddRowDefault',))
-                elif findMatchedFilter[3] == 'userAdded':
-                    if count % 2 == 0:
-                        self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
-                                                                                      findMatchedFilter[2]),
-                                                      tags=('evenRowUserAdded',))
-                    else:
-                        self.filterModTab1List.insert(parent="", index="end", values=(findMatchedFilter[1],
-                                                                                      findMatchedFilter[2]),
-                                                      tags=('oddRowUserAdded',))
-                self.filterModTab1List.column("Filter-Name", width=270)
-                self.filterModTab1List.column("Filter-Syntax", width=440)
-                count = count + 1
-            self.filterModTab1FilterNameEntry.delete(0, 'end')
-        self.filterModTab1FetchallBtn.config(state='normal', bg='light green', cursor='hand2')
-        dbConn.close()
-        self.writeLog('info', 'List updated, closing db connection')
 
     def updateListboxFetchAll(self):
-        self.writeLog('info', 'Fetching all the available filters')
+        self.filterModTab1List.focus_set()
         count = 0
         self.filterModTab1List.delete(*self.filterModTab1List.get_children())
-        self.filterModTab1MessageLabel.config(text='')
-        self.writeLog('info', f'connecting to DB {self.dbFileName}')
         dbConn = connect(self.dbFileName)
         dbCur = dbConn.cursor()
         dbCur.execute(f"SELECT * FROM {self.dbTableName}")
         allAvailFilter = dbCur.fetchall()
-        self.writeLog('info', 'Listing fetched filters')
+        self.filterModTab1List.column("Filter-Name", width=270)
+        self.filterModTab1List.column("Filter-Syntax", width=440)
         for oneFilter in allAvailFilter[1:]:
             if oneFilter[3] == 'default':
                 if count % 2 == 0:
@@ -843,15 +831,12 @@ class filterMod:
                 else:
                     self.filterModTab1List.insert(parent="", index="end", values=(oneFilter[1], oneFilter[2]),
                                                   tags=('oddRowUserAdded',))
-            self.filterModTab1List.column("Filter-Name", width=270)
-            self.filterModTab1List.column("Filter-Syntax", width=440)
             count = count + 1
         dbCur.close()
         self.filterNameUserEntry.delete(0, "end")
         self.filterNameUserEntry.config(state='disabled')
         self.filterSyntaxUserEntry.delete(0, "end")
         self.filterSyntaxUserEntry.config(state='disabled')
-        self.writeLog('info', 'List updated with all the available filter, closing db connection')
         dbConn.close()
 
     def onListItemSelection(self, event):
