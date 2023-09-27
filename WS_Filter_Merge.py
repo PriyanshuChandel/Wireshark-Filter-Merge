@@ -205,7 +205,7 @@ class WSApp:
         self.progressStyle.configure("Custom.Horizontal.TProgressbar", text='0 %')
         self.messageLabel.config(text='')
         self.saveDialogBtn.config(state='disabled', bg='light grey', cursor='arrow')
-        self.toolMenu.entryconfig("Add Filter", state="normal")
+        self.toolMenu.entryconfig("Filters", state="normal")
         try:
             rmtree('Filtered')
             rmtree('Extracted')
@@ -264,7 +264,7 @@ class WSApp:
 
     def fileDialogFunc(self):
         def fileDialogTread():
-            self.toolMenu.entryconfig("Add Filter", state="disabled")
+            self.toolMenu.entryconfig("Filters", state="disabled")
             self.messageLabel.config(text='')
             start = time()
             radioVar = self.radioVar.get()
@@ -376,14 +376,14 @@ class WSApp:
             seconds, milliseconds = divmod(remainder, 1)
             self.writeLog('info', f'ELAPSED TIME TO READ FILES {int(hours)} hours {int(minutes)} minutes {int(seconds)}'
                                   f' seconds {int(milliseconds * 1000)} milliseconds')
-            self.toolMenu.entryconfig("Add Filter", state="normal")
+            self.toolMenu.entryconfig("Filters", state="normal")
 
         threadFileDialog = Thread(target=fileDialogTread)
         threadFileDialog.start()
 
     def filterMerge(self):
         def filterMergeTread():
-            self.toolMenu.entryconfig("Add Filter", state="disabled")
+            self.toolMenu.entryconfig("Filters", state="disabled")
             self.progress.config(value=0)
             self.progressStyle.configure("Custom.Horizontal.TProgressbar", background="yellow", text='0 %')
             self.submitBtn.config(state='disabled', bg='light grey', cursor='arrow')
@@ -510,7 +510,7 @@ class WSApp:
                                   f'{int(minutesTotal)} minutes {int(secondsTotal)} seconds '
                                   f'{int(millisecondsTotal * 1000)} milliseconds')
 
-            self.toolMenu.entryconfig("Add Filter", state="normal")
+            self.toolMenu.entryconfig("Filters", state="normal")
 
         thread_submitBtn = Thread(target=filterMergeTread)
         thread_submitBtn.start()
