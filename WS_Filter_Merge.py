@@ -52,7 +52,7 @@ class WSApp:
         filterwarnings("ignore", category=UserWarning)
         self.window = Tk()
         self.window.config(bg='light grey')
-        self.window.title('PacketPulse v1.3')
+        self.window.title('PacketPulse v1.4')
         self.window.geometry('520x420')
         self.window.iconbitmap(self.iconFile)
         self.window.resizable(False, False)
@@ -139,7 +139,7 @@ class WSApp:
         self.warnLabel.place(x=6, y=380)
 
     def aboutWindow(self):
-        message = 'Version 1.3 - Wireshark Filter and Merge\nDeveloped by Priyanshu\n\nFor any suggestions or ' \
+        message = 'Version 1.4 - Wireshark Filter and Merge\nDeveloped by Priyanshu\n\nFor any suggestions or ' \
                   'enhancements, please feel free to contact me through the following channels:\n\nEmail: chandel' \
                   'priyanshu8@outlook.com\nMobile: +91-XXXXXXXXXX\n\nYou can also reach me via my personal ' \
                   'website:\nhttps://priyanshuchandel.github.io/'
@@ -717,7 +717,7 @@ class filterMod:
         self.filterModTab1List.tag_configure('evenRowUserAdded', background='grey')
         self.filterModTab1List.tag_configure('oddRowUserAdded', background='light grey')
         self.style = Style()
-        self.style.theme_use('default')
+        self.style.theme_use('clam')
         self.style.configure("Treeview", foreground='black', background='white', rowheight=25, fieldbackground='white')
         self.style.configure("Treeview.Heading", font=("Helvetica", 10))
         self.style.map("Treeview", background=[('selected', 'brown')])
